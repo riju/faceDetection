@@ -48,6 +48,10 @@ partial interface VideoFrame {
   readonly attribute FrozenArray<DetectedFace>? detectedFaces;
 };
 
+partial dictionary VideoFrameMetadata {
+  FrozenArray<DetectedFace> detectedFaces;
+};
+
 dictionary DetectedFace {
   required long                     id;
   required float                    probability;
