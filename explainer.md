@@ -172,7 +172,27 @@ self.onmessage = async function(e) {
   .pipeThrough(videoTransformer)
   .pipeTo(e.data.videoWritable);
 }
+```
+```js
+function updateCanvas(now, metadata) {
+  const canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  for (const face of (metadata.detectedFaces || [])) {
+    if (!face.contour || !face.contour.length)
+      continue;
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(face.contour[0].x, face.contour[0].y);
+    for (const point of face.contour.slice(1))
+      canvasCtx.lineTo(point.x, point.y);
+    canvasCtx.closePath();
+    canvasCtx.strokeStyle = 'red';
+    canvasCtx.stroke();
+  }
+  videoElement.requestVideoFrameCallback(updateCanvas);
+}
 
+const canvasElement = document.querySelector("canvas");
+const canvasCtx = canvasElement.getContext("2d");
+videoElement.requestVideoFrameCallback(updateCanvas);
 ```
 
 ## Stakeholder Feedback / Opposition
