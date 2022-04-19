@@ -19,7 +19,7 @@ Face Detection is the process of detecting human faces in a given scene and dist
 
 * Face Detection API should be anchored to [VideoFrame](https://www.w3.org/TR/webcodecs/#videoframe-interface) defined in WebCodecs instead of [MediaStreamTrack](https://www.w3.org/TR/mediacapture-streams/#dom-mediastreamtrack).
 
-* Face Detection API should try to return a **contour** instead of a bounding box. The number of points describing the countour  can be user defined via **faceDetectionNumContourPoints** settings and implementations presently can default to a four point rectangle.
+* Face Detection API should try to return a **contour** instead of a bounding box. The number of points describing the countour  can be user defined via **faceDetectionMode** settings and implementations presently can default to a four point rectangle.
 
 * Face Detection API should try to return a mesh corresponding to the detected faces. TensorFlow returns a 468 landmark FaceMesh and most DNNs can return soemthing similar. Even though mesh is not supported on any platforms presently, for the sake of extensibility, it should be considered.
 
@@ -77,37 +77,30 @@ partial dictionary MediaTrackSupportedConstraints {
   boolean faceDetectionMode = true;
   boolean faceDetectionLandmarks = true;
   boolean faceDetectionMaxNumFaces = true;
-  boolean faceDetectionNumContourPoints = true;
-  boolean faceDetectionNumLandmarkPoints = true;
 };
 
 partial dictionary MediaTrackCapabilities {
   sequence<DOMString> faceDetectionMode;
   sequence<boolean>   faceDetectionLandmarks;
   ULongRange          faceDetectionMaxNumFaces;
-  ULongRange          faceDetectionNumContourPoints;
-  ULongRange          faceDetectionNumLandmarkPoints;
 };
 
 partial dictionary MediaTrackConstraintSet {
   ConstrainDOMString faceDetectionMode;
   ConstrainBoolean   faceDetectionLandmarks;
   ConstrainULong     faceDetectionMaxNumFaces;
-  ConstrainULong     faceDetectionNumContourPoints;
-  ConstrainULong     faceDetectionNumLandmarkPoints;
 };
 
 partial dictionary MediaTrackSettings {
   DOMString faceDetectionMode;
   boolean   faceDetectionLandmarks;
   long      faceDetectionMaxNumFaces;
-  long      faceDetectionNumContourPoints;
-  long      faceDetectionNumLandmarkPoints;
 };
 
 enum FaceDetectionMode {
   "none",
   "presence",
+  "bounding-box",
   "contour",
   "mesh"
 };
@@ -128,8 +121,7 @@ enum FaceDetectionMode {
 // main.js:
 // Check if face detection is supported by the browser
 const supports = navigator.mediaDevices.getSupportedConstraints();
-if (supports.faceDetectionMode &&
-    supports.faceDetectionNumContourPoints) {
+if (supports.faceDetectionMode) {
   // Browser supports face contour detection.
 } else {
   throw('Face contour detection is not supported');
@@ -137,8 +129,7 @@ if (supports.faceDetectionMode &&
 
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
-  video: { faceDetectionMode: 'contour',
-           faceDetectionNumContourPoints: { exact: 4 } }
+  video: { faceDetectionMode: 'bounding-box' }
 });
 const [videoTrack] = stream.getVideoTracks();
 
@@ -202,7 +193,7 @@ if (supports.faceDetectionMode) {
 
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
-  video: { faceDetectionMode: 'contour' }
+  video: { faceDetectionMode: ['contour', 'bounding-box'] }
 });
 
 // Show to user.
