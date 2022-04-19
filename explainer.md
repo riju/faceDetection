@@ -153,6 +153,7 @@ videoWorker.postMessage({
   videoWritable: videoGenerator.writable
 }, [videoProcessor.readable, videoGenerator.writable]);
 videoElement.srcObject = new MediaStream([videoGenerator]);
+videoElement.onloadedmetadata = event => videoElement.play();
 
 // video-worker.js:
 self.onmessage = async function(e) {
@@ -173,6 +174,7 @@ self.onmessage = async function(e) {
   .pipeTo(e.data.videoWritable);
 }
 ```
+
 ```js
 function updateCanvas(now, metadata) {
   const canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -190,8 +192,25 @@ function updateCanvas(now, metadata) {
   videoElement.requestVideoFrameCallback(updateCanvas);
 }
 
+// Check if face detection is supported by the browser
+const supports = navigator.mediaDevices.getSupportedConstraints();
+if (supports.faceDetectionMode) {
+  // Browser supports face contour detection.
+} else {
+  throw('Face contour detection is not supported');
+}
+
+// Open camera with face detection enabled
+const stream = await navigator.mediaDevices.getUserMedia({
+  video: { faceDetectionMode: 'contour' }
+});
+
+// Show to user.
 const canvasElement = document.querySelector("canvas");
 const canvasCtx = canvasElement.getContext("2d");
+const videoElement = document.querySelector("video");
+videoElement.srcObject = new MediaStream([videoGenerator]);
+videoElement.onloadedmetadata = event => videoElement.play();
 videoElement.requestVideoFrameCallback(updateCanvas);
 ```
 
