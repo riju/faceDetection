@@ -39,8 +39,14 @@ Face Detection is the process of detecting human faces in a given scene and dist
 
 * Face Detection API does not need to support facial expressions. Many platforms do support **BLINK** and **SMILE** and ML Frameworks do support a diverse set of expressions, usually **ANGER**, **DISGUST**, **FEAR**, **HAPPINESS**, **SADNESS**, **SURPRISE**; **NEUTRAL**, etc.  [Many](https://www.w3.org/2021/11/24-webrtc-minutes.html#t04) felt expressions being more subjective and there’s a concern about the expression detection going wrong.
 
+## Performance
 
-## User research
+Face detection, using the proposed Javascript API, was compared to several other alternatives in power usage.
+The results were normalized against base case (viewfinder only, no face detection) and are shown in the following chart.
+
+![Package Power Consumption](ptat-fd15fps-rel.png)
+
+Javacript test programs were created to capture frames and to detect faces at VGA resolution (640x480) at 15 fps. The tests were run on Intel Tigerlake running Windows 11. A test run length was 120 seconds (2 minutes) with 640x480 pixel frame resolution. 
 
 ## Face Detection API
 
