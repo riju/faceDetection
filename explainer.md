@@ -243,12 +243,14 @@ Many thanks for valuable feedback and advice from:
 - Youenn Fablet
 - Dominique Hazael-Massieux
 
-*Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See Intel's Global Human Rights Principles. Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.*
+## Disclaimer
 
-*Intel technologies may require enabled hardware, software or service activation.*
+Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See Intel's Global Human Rights Principles. Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.
 
-*No product or component can be absolutely secure.*
+Intel technologies may require enabled hardware, software or service activation.
 
-*Your costs and results may vary.*
+No product or component can be absolutely secure.
 
-*© Intel Corporation*
+Your costs and results may vary.
+
+© Intel Corporation
