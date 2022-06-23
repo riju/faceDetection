@@ -21,7 +21,7 @@ Face Detection is the process of detecting human faces in a given scene and dist
 
 * Face Detection API should be anchored to [VideoFrameMetadata](https://wicg.github.io/video-rvfc/#dictdef-videoframemetadata) defined in [HTMLVideoElement.requestVideoFrameCallback](https://wicg.github.io/video-rvfc/).
 
-* Face Detection API should try to return a **contour** instead of a bounding box. The number of points describing the countour  can be user defined via **faceDetectionNumContourPoints** settings and implementations presently can default to a four point rectangle.
+* Face Detection API should try to return a **contour** instead of a bounding box. The number of points describing the contour  can be user defined via **faceDetectionNumContourPoints** settings and implementations presently can default to a four point rectangle.
 
 * Face Detection API should try to return a mesh corresponding to the detected faces. TensorFlow returns a 468 landmark FaceMesh and most DNNs can return soemthing similar. Even though mesh is not supported on any platforms presently, for the sake of extensibility, it should be considered.
 
