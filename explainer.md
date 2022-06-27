@@ -93,26 +93,18 @@ enum FaceLandmark {
 
 partial dictionary MediaTrackSupportedConstraints {
   boolean faceDetectionMode = true;
-  boolean faceDetectionLandmarks = true;
-  boolean faceDetectionMaxNumFaces = true;
 };
 
 partial dictionary MediaTrackCapabilities {
   sequence<DOMString> faceDetectionMode;
-  sequence<boolean>   faceDetectionLandmarks;
-  ULongRange          faceDetectionMaxNumFaces;
 };
 
 partial dictionary MediaTrackConstraintSet {
   ConstrainDOMString faceDetectionMode;
-  ConstrainBoolean   faceDetectionLandmarks;
-  ConstrainULong     faceDetectionMaxNumFaces;
 };
 
 partial dictionary MediaTrackSettings {
   DOMString faceDetectionMode;
-  boolean   faceDetectionLandmarks;
-  long      faceDetectionMaxNumFaces;
 };
 
 enum FaceDetectionMode {
@@ -120,6 +112,7 @@ enum FaceDetectionMode {
   "presence",     # Only the presence of face or faces is returned, not location
   "bounding-box", # Return bound box for face
   "contour",      # Approximate contour of the detected faces is returned
+  "landmarks",    # Approximate contour of the detected faces is returned with facial landmarks
 };
 
 ```
@@ -141,9 +134,9 @@ enum FaceDetectionMode {
 // Check if face detection is supported by the browser
 const supports = navigator.mediaDevices.getSupportedConstraints();
 if (supports.faceDetectionMode) {
-  // Browser supports face contour detection.
+  // Browser supports face detection.
 } else {
-  throw('Face contour detection is not supported');
+  throw('Face detection is not supported');
 }
 
 // Open camera with face detection enabled
@@ -170,11 +163,11 @@ self.onmessage = async function(e) {
   const videoTransformer = new TransformStream({
     async transform(videoFrame, controller) {
       for (const face of videoFrame.detectedFaces) {
-        console.log(
-          `Face @ (${face.contour[0].x}, ${face.contour[0].y}), ` +
-                 `(${face.contour[1].x}, ${face.contour[1].y}), ` +
-                 `(${face.contour[2].x}, ${face.contour[2].y}), ` +
-                 `(${face.contour[3].x}, ${face.contour[3].y})`);
+        let s = '';
+        for (const f of face.contour) {
+	  s += `(${f.x}, ${f.y}),`
+	}
+        console.log(`Face @ (${s})`);
       }
       controller.enqueue(videoFrame);
     }
