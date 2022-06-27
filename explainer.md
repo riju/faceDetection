@@ -23,8 +23,6 @@ Face Detection is the process of detecting human faces in a given scene and dist
 
 * Face Detection API should try to return a **contour** instead of a bounding box. The number of points describing the contour  can be user defined via **faceDetectionMode** settings and implementations presently can default to a four point rectangle.
 
-* Face Detection API should try to return a mesh corresponding to the detected faces. TensorFlow returns a 468 landmark FaceMesh and most DNNs can return something similar. Even though mesh is not supported on any platforms presently, for the sake of extensibility, it should be considered.
-
 * Face Detection API should allow face tracking.
 
 * Face Detection API should work with [TransformStream](https://developer.mozilla.org/en-US/docs/Web/API/TransformStream).
@@ -38,6 +36,8 @@ Face Detection is the process of detecting human faces in a given scene and dist
 ## Non-goals
 
 * Face Detection API does not need to support facial expressions. Many platforms do support **BLINK** and **SMILE** and ML Frameworks do support a diverse set of expressions, usually **ANGER**, **DISGUST**, **FEAR**, **HAPPINESS**, **SADNESS**, **SURPRISE**; **NEUTRAL**, etc.  [Many](https://www.w3.org/2021/11/24-webrtc-minutes.html#t04) felt expressions being more subjective and there’s a concern about the expression detection going wrong.
+
+* Face Detection API does not need to return a mesh corresponding to the detected faces. Even though TensorFlow returns a 468 landmark FaceMesh and most DNNs can return something similar, mesh is not supported on any platforms presently, and for the sake of simplicity, it is excluded for now. However, in the long term it may be appropriate to extend the face detection API to be able to also return mesh-based face detection results. This is left for future work.
 
 ## Platform Support 
 
@@ -75,7 +75,6 @@ dictionary DetectedFace {
   required long                     id;
   required float                    probability;
   FrozenArray<Point2D>              contour;
-  FrozenArray<Point2D>              mesh;
   FrozenArray<DetectedFaceLandmark> landmarks;
 };
 
@@ -117,11 +116,10 @@ partial dictionary MediaTrackSettings {
 };
 
 enum FaceDetectionMode {
-  "none",
-  "presence",
-  "bounding-box",
-  "contour",
-  "mesh"
+  "none",         # Face detection is not needed
+  "presence",     # Only the presence of face or faces is returned, not location
+  "bounding-box", # Return bound box for face
+  "contour",      # Approximate contour of the detected faces is returned
 };
 
 ```
