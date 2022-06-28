@@ -124,11 +124,14 @@ partial dictionary MediaTrackSettings {
 };
 
 enum FaceDetectionMode {
-  "none",         # Face detection is not needed
-  "presence",     # Only the presence of face or faces is returned, not location
-  "bounding-box", # Return bound box for face
-  "contour",      # Approximate contour of the detected faces is returned
-  "landmarks",    # Approximate contour of the detected faces is returned with facial landmarks
+  "none",         # Face detection is not needed.
+
+  "presence",     # Only the presence of face or faces is returned, not location.
+
+  "contour",      # Approximate contour of the detected faces is returned, bounding-box by default.
+
+  "landmarks",    # Approximate contour of the detected faces is returned with facial landmarks.
+
 };
 
 ```
@@ -162,9 +165,11 @@ Currently common platforms such as ChromeOS, Android, and Windows support system
 // Check if face detection is supported by the browser
 const supports = navigator.mediaDevices.getSupportedConstraints();
 if (supports.faceDetectionMode) {
-  // Browser supports face detection.
+  // Browser supports face detection.
+
 } else {
-  throw('Face detection is not supported');
+  throw('Face detection is not supported');
+
 }
 
 // Open camera with face detection enabled
