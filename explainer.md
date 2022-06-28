@@ -122,7 +122,19 @@ enum FaceDetectionMode {
 
 ## Key scenarios
 
+Currently common platforms such as ChromeOS, Android, and Windows support system APIs which return only face bounding box and landmarks, not accurate contour, and therefore initial implementations are expected to support only bounding-box (ie. a contour with maximum of four points). These features can be used as the major building block in several scenarios such as:
 
+* Auto-mute: a videoconferencing application can automatically mute microphone or blank camera image if user (face) presence is not detected.
+
+* Face framing: application can use pan-tilt-zoom interface to zoom close up to user's face, or if pan-tilt-zoom is not available, crop the image digitally appropriately.
+
+* Face enhancement: application can apply various image enhancement filters to user's face. The filters may be either designed exclusively to faces, or when it is desired to save computation, background can be excluded from the filtering.
+
+* Funny hats: application may want to render augmented reality on top of user faces by drawing features such as glasses or a hat. For accurate rendering, facial landmarks would be preferred.
+
+* Video encoding: many video encoders can allocate higher amount of bits to given locations in frames. Face bounding boxes can be used to increase the visual quality of faces at the cost of lower background quality.
+
+* Neural networks: these can be used to derive accurate face contours, recognize faces, or extract other facial information. However, these are typically slow and heavyweight algorithms which are too burdensome to apply to entire images. A known face bounding box allows applying an algorithm only to the relevant part of images.
 
 
 ## Examples
