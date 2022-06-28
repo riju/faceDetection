@@ -39,6 +39,22 @@ Face Detection is the process of detecting human faces in a given scene and dist
 
 * Face Detection API does not need to return a mesh corresponding to the detected faces. Even though TensorFlow returns a 468 landmark FaceMesh and most DNNs can return something similar, mesh is not supported on any platforms presently, and for the sake of simplicity, it is excluded for now. However, in the long term it may be appropriate to extend the face detection API to be able to also return mesh-based face detection results. This is left for future work.
 
+## Using the face detection API
+
+
+The API consists of two parts: first, the constraint `faceDetectionMode` to `getUserMedia()` or `applyConstrains()` is used to negotiate and enable the desired face detection mode. Often, camera drivers run already internally face detection for 3A, so enabling face detection might just make the results available to Web applications. The corresponding fields are added also to media track settings and capabilities. 
+
+The second part of the API adds a new field `detectedFaces` of type sequence of `DetectedFace` into WebCodecs `VideoFrameMetadata` which provides information of the detected faces on the frame. In `DetectedFace`, the field `id` is used to track faces between frames: the same non-zero `id` in a face between different frames indicates that it is the same face. The value of zero means that tracking is not supported. `probability` is the probability that the returned face is in fact a face and not a false detection. This should be always greater than zero but less than one, since no perfect algorithm exists. If probability is not specified, user agent sets the field to zero.
+
+The field `contour` provides an arbitrary number of points which enclose the face. Sophisticated implementations could provide a large number of points but initial implementations are expected to provide four contour points located in the corners of a rectangular region which describes the face bounding box. User agent is allowed to provide a minimum of one point, in which case the point should be located at the center of the face.
+
+The field `landmarks` provides a list of facial features belonging to the detected face, such as eyes or mouth. User agent may return accurate contour for the features, but early implementations are expected to deliver only a single point corresponding to the center of a feature.
+
+The constraint `faceDetectionMode` is used by applications to describe the level of facial data that they need. At the lowest enabled level, `presence` will return the sequence of `DetectedFace`, but the `contour` and `landmarks` sequences will be empty. When `faceDetectionMode` is `contour`, arbitrary number of points around the faces will be returned but no landmarks. An user agent might return only four contour points corresponding to face bounding box. If a Web application needs only maximum of four contour points (bounding box), it can set `faceDetectionMode` to `bounding-box` which limits number of contour points to four, residing at the corners of a rectangle around the detected faces.
+
+At the highest level, when `faceDetectionMode` is `landmarks`, the full precision contour which is available is returned along with landmark features.
+
+
 ## Platform Support 
 
 
