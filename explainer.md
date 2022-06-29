@@ -75,6 +75,20 @@ The results were normalized against base case (viewfinder only, no face detectio
 
 Javacript test programs were created to capture frames and to detect faces at VGA resolution (640x480) at 15 fps. The tests were run on Intel Tigerlake running Windows 11. A test run length was 120 seconds (2 minutes) with 640x480 pixel frame resolution. 
 
+## User research
+
+* TEAMS : Supportive, but [not supportive of adding facial expressions](https://www.w3.org/2021/11/24-webrtc-minutes.html#t04) and doubtful on the accuracy of emotion analysis.
+
+*Agreed, Facial expressions are not part of [Non-goals](https://github.com/riju/faceDetection/blob/main/explainer.md#non-goals) for this API*
+
+
+* MEET : Supportive, but many applications might not be using rectangle-bounding box, mask/contour more useful.
+
+*Currently common platforms such as ChromeOS, Android, and Windows support [system APIs](https://github.com/riju/faceDetection/blob/main/explainer.md#platform-support) which return only face bounding box and landmarks, not accurate contour, and therefore initial implementations are expected to support only bounding-box (ie. a contour with maximum of four points). We would keep the API extensible, so that proper contour support can be added in future. A few [use-cases for bounding-box face detection](https://github.com/riju/faceDetection/blob/main/explainer.md#key-scenarios) are listed.*
+
+
+* Zoom : 
+
 ## Face Detection API
 
 
@@ -124,11 +138,15 @@ partial dictionary MediaTrackSettings {
 };
 
 enum FaceDetectionMode {
-  "none",         # Face detection is not needed
-  "presence",     # Only the presence of face or faces is returned, not location
+  "none",         # Face detection is not needed
+
+  "presence",     # Only the presence of face or faces is returned, not location
+
   "bounding-box", # Return bound box for face
-  "contour",      # Approximate contour of the detected faces is returned
-  "landmarks",    # Approximate contour of the detected faces is returned with facial landmarks
+  "contour",      # Approximate contour of the detected faces is returned
+
+  "landmarks",    # Approximate contour of the detected faces is returned with facial landmarks
+
 };
 
 ```
@@ -162,9 +180,11 @@ Currently common platforms such as ChromeOS, Android, and Windows support system
 // Check if face detection is supported by the browser
 const supports = navigator.mediaDevices.getSupportedConstraints();
 if (supports.faceDetectionMode) {
-  // Browser supports face detection.
+  // Browser supports face detection.
+
 } else {
-  throw('Face detection is not supported');
+  throw('Face detection is not supported');
+
 }
 
 // Open camera with face detection enabled
@@ -251,9 +271,6 @@ videoElement.requestVideoFrameCallback(updateCanvas);
 
 [Implementors and other stakeholders may already have publicly stated positions on this work. If you can, list them here with links to evidence as appropriate.]
 
-- [Teams] : No signals
-- [Zoom] : No signals
-- [WebEx] : No signals
 - [Firefox] : No signals
 - [Safari] : No signals
 
