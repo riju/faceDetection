@@ -89,16 +89,34 @@ Javacript test programs were created to capture frames and to detect faces at VG
 
 * Zoom : 
 
-## Face Detection API
+## Face Detection Side-Channel API
 
+A generic method to add new metadata fields into WebCodecs `VideoFrame` has been
+[attempted](https://github.com/w3c/webcodecs/issues/95) but this has not been yet
+merged. Due to this, it was suggested that a side-channel would be used to
+obtain the face detection results instead of either `VideoFrame` or
+`VideoFrameMetadata`.
+
+In this section we propose an API which uses the side-channel method to provide
+face detection results.
+We modify `MediaStreamTrackProcessor` by adding to `MediaStreamTrackProcessorInit`
+a new `metadata` parameter which can be used to change the `MediaStreamTrackProcessor`
+to process video frames and metadata chunks instead of video frame only chunks.
+We also modify `HTMLVideoElement` by adding a new callback to it which provides
+video frame metadata including face detection results.
 
 ```js
-partial interface VideoFrame {
-  readonly attribute FrozenArray<DetectedFace>? detectedFaces;
+partial dictionary MediaStreamTrackProcessorInit {
+  boolean metadata = false;
 };
 
-partial dictionary VideoFrameMetadata {
+dictionary MediaStreamVideoFrameMetadata /* : VideoFrameMetadata */ {
   FrozenArray<DetectedFace> detectedFaces;
+};
+
+dictionary MediaStreamVideoFrameAndMetadata {
+  required VideoFrame videoFrame;
+  required MediaStreamVideoFrameMetadata metadata;
 };
 
 dictionary DetectedFace {
@@ -138,21 +156,34 @@ partial dictionary MediaTrackSettings {
 };
 
 enum FaceDetectionMode {
-  "none",         # Face detection is not needed
-
-  "presence",     # Only the presence of face or faces is returned, not location
-
-  "bounding-box", # Return bound box for face
-  "contour",      # Approximate contour of the detected faces is returned
-
-  "landmarks",    # Approximate contour of the detected faces is returned with facial landmarks
-
+  "none",         // Face detection is not needed
+  "presence",     // Only the presence of face or faces is returned, not location
+  "bounding-box", // Return bound box for face
+  "contour",      // Approximate contour of the detected faces is returned
+  "landmarks",    // Approximate contour of the detected faces is returned with facial landmarks
 };
 
+callback MediaStreamVideoFrameMetadataRequestCallback = undefined(DOMHighResTimeStamp now, MediaStreamVideoFrameMetadata metadata);
+
+partial interface HTMLVideoElement {
+    unsigned long requestVideoFrameMediaStreamMetadataCallback(MediaStreamVideoFrameMetadataRequestCallback callback);
+    undefined cancelVideoFrameMediaStreamMetadataCallback(unsigned long handle);
+};
 ```
+
+If a `MediaStreamTrackProcessor` is initiated with `{metadata: true}`,
+the `MediaStreamTrackProcessor` processes `MediaStreamVideoFrameAndMetadata`
+chunks (instead of `VideoFrame` chunks) and therefore passes them
+to `Transformer.transform(chunk, controller)` and accepts them
+for `controller.enqueue()`.
+An example is shown in Section [Example 1](#example-1).
+
+The new callback `MediaStreamVideoFrameMetadataRequestCallback` is called
+when new face detection results are available on a video stream,
+similarly to `requestVideoFrameCallback`.
+An example is shown in Section [Example 2](#example-2).
+
 [PR](https://github.com/w3c/mediacapture-extensions/pull/48)
-
-
 
 ## Key scenarios
 
@@ -181,10 +212,8 @@ Currently common platforms such as ChromeOS, Android, and Windows support system
 const supports = navigator.mediaDevices.getSupportedConstraints();
 if (supports.faceDetectionMode) {
   // Browser supports face detection.
-
 } else {
   throw('Face detection is not supported');
-
 }
 
 // Open camera with face detection enabled
@@ -196,7 +225,7 @@ const [videoTrack] = stream.getVideoTracks();
 // Use a video worker and show to user.
 const videoElement = document.querySelector("video");
 const videoGenerator = new MediaStreamTrackGenerator({kind: 'video'});
-const videoProcessor = new MediaStreamTrackProcessor({track: videoTrack});
+const videoProcessor = new MediaStreamTrackProcessor({track: videoTrack, metadata: true});
 const videoSettings = videoTrack.getSettings();
 const videoWorker = new Worker('video-worker.js');
 videoWorker.postMessage({
@@ -209,15 +238,15 @@ videoElement.onloadedmetadata = event => videoElement.play();
 // video-worker.js:
 self.onmessage = async function(e) {
   const videoTransformer = new TransformStream({
-    async transform(videoFrame, controller) {
-      for (const face of videoFrame.detectedFaces) {
+    async transform({videoFrame, metadata}, controller) {
+      for (const face of metadata.detectedFaces) {
         let s = '';
         for (const f of face.contour) {
 	  s += `(${f.x}, ${f.y}),`
 	}
         console.log(`Face @ (${s})`);
       }
-      controller.enqueue(videoFrame);
+      controller.enqueue({videoFrame, metadata});
     }
   });
   e.data.videoReadable
@@ -242,7 +271,7 @@ function updateCanvas(now, metadata) {
     canvasCtx.strokeStyle = 'red';
     canvasCtx.stroke();
   }
-  videoElement.requestVideoFrameCallback(updateCanvas);
+  videoElement.requestMediaStreamVideoFrameMetadataCallback(updateCanvas);
 }
 
 // Check if face detection is supported by the browser
@@ -264,7 +293,7 @@ const canvasCtx = canvasElement.getContext("2d");
 const videoElement = document.querySelector("video");
 videoElement.srcObject = new MediaStream([videoGenerator]);
 videoElement.onloadedmetadata = event => videoElement.play();
-videoElement.requestVideoFrameCallback(updateCanvas);
+videoElement.requestMediaStreamVideoFrameMetadataCallback(updateCanvas);
 ```
 
 ## Stakeholder Feedback / Opposition
