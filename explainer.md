@@ -134,7 +134,38 @@ enum FaceDetectionMode {
 ```
 [PR](https://github.com/w3c/mediacapture-extensions/pull/48)
 
+## Side-channel only (alternative) API
 
+A generic method to add new metadata fields into WebCodecs VideoFrame has been
+[attempted](https://github.com/w3c/webcodecs/issues/95) but this has not been yet
+merged. Due to this, it was suggested that a side-channel would be used to
+obtain the face detection results instead of either `VideoFrame` or
+`VideoFrameMetadata`.
+
+In this section we propose an alternative API which uses the side-channel
+(a callback) method to provide face detection results instead of the above.
+We modify `HTMLVideoElement` by adding a new callback to it which provides the
+face detection results.
+
+The rest of the structures (ie. the returned face detection results) are not
+changed so they are not replicated here.
+
+
+```js
+
+callback FaceDetectionRequestCallback = undefined(DOMHighResTimeStamp now, FrozenArray<DetectedFace> detectedFaces);
+
+partial interface HTMLVideoElement {
+    unsigned long requestFaceDetectionCallback(FaceDetectionRequestCallback callback);
+    undefined cancelFaceDetectionRequestCallback(unsigned long handle);
+};
+
+```
+
+The new callback `FaceDetectionRequestCallback` is called when new face detection results are
+available on a video stream, similarly to `requestVideoFrameCallback`.
+
+An example is shown in Section [Example 3](#markdown-header-example-3:-side-channel-api).
 
 ## Key scenarios
 
@@ -245,6 +276,49 @@ const videoElement = document.querySelector("video");
 videoElement.srcObject = new MediaStream([videoGenerator]);
 videoElement.onloadedmetadata = event => videoElement.play();
 videoElement.requestVideoFrameCallback(updateCanvas);
+```
+
+### Example 3: Side-channel API
+
+
+```js
+
+function updateCanvas(now, detectedFaces) {
+  const canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
+  for (const face of (detectedFaces || [])) {
+    if (!face.contour || !face.contour.length)
+      continue;
+    canvasCtx.beginPath();
+    canvasCtx.moveTo(face.contour[0].x, face.contour[0].y);
+    for (const point of face.contour.slice(1))
+      canvasCtx.lineTo(point.x, point.y);
+    canvasCtx.closePath();
+    canvasCtx.strokeStyle = 'red';
+    canvasCtx.stroke();
+  }
+  videoElement.requestFaceDetectionCallback(updateCanvas);
+}
+
+// Check if face detection is supported by the browser
+const supports = navigator.mediaDevices.getSupportedConstraints();
+if (supports.faceDetectionMode) {
+  // Browser supports face contour detection.
+} else {
+  throw('Face contour detection is not supported');
+}
+
+// Open camera with face detection enabled
+const stream = await navigator.mediaDevices.getUserMedia({
+  video: { faceDetectionMode: ['contour', 'bounding-box'] }
+});
+
+// Show to user.
+const canvasElement = document.querySelector("canvas");
+const canvasCtx = canvasElement.getContext("2d");
+const videoElement = document.querySelector("video");
+videoElement.srcObject = new MediaStream([videoGenerator]);
+videoElement.onloadedmetadata = event => videoElement.play();
+videoElement.requestFaceDetectionCallback(newFaceDetection);
 ```
 
 ## Stakeholder Feedback / Opposition
