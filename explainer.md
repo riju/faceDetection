@@ -51,13 +51,15 @@ The field `contour` provides an arbitrary number of points which enclose the fac
 The field `landmarks` provides a list of facial features belonging to the detected face, such as eyes or mouth. User agent may return accurate contour for the features, but early implementations are expected to deliver only a single point corresponding to the center of a feature.
 
 The contour of the detected faces and landmarks is described as a sequence of `Point2D` and the units
-conform to the other common web specifications, such as the
-[`pointsOfInterest`](https://w3c.github.io/mediacapture-image/#dom-mediatracksettings-pointsofinterest)
-field in ['MediaTrackSettings'](https://www.w3.org/TR/mediacapture-streams/#idl-def-MediaTrackSettings).
-The origin of coordinates is situated in the upper leftmost corner of the space and the lower rightmost
-corner corresponds to `width` and `height` as returned in the dictionary [`MediaTrackSettings`](https://www.w3.org/TR/mediacapture-streams/#dom-mediatracksettings). We allow
-coordinates that extend beyond image borders since a detected face could be partially outside of the
-visible image.
+conform to the 
+[`pointsOfInterest`](https://w3c.github.io/mediacapture-image/#points-of-interest)
+field in [`MediaTrackSettings`](https://www.w3.org/TR/mediacapture-streams/#idl-def-MediaTrackSettings)
+with the exception that the points may also lie outside of the frame since a detected face could be
+partially outside of the visible image.
+A `Point2D` is interpreted to represent a pixel position in a normalized square space. The origin of
+coordinates {x,y} = {0.0, 0.0} represents the upper leftmost corner whereas the {x,y} =
+{1.0, 1.0} represents the lower rightmost corner: the x coordinate (columns) increases rightwards and the y
+coordinate (rows) increases downwards.
 
 The constraint `faceDetectionMode` is used by applications to describe the level of facial data that they need. At the lowest enabled level, `presence` will return the sequence of `DetectedFace`, but the `contour` and `landmarks` sequences will be empty. When `faceDetectionMode` is `contour`, arbitrary number of points around the faces will be returned but no landmarks. An user agent might return only four contour points corresponding to face bounding box. If a Web application needs only maximum of four contour points (bounding box), it can set `faceDetectionMode` to `bounding-box` which limits number of contour points to four, residing at the corners of a rectangle around the detected faces.
 
