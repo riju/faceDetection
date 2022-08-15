@@ -53,7 +53,7 @@ The field `landmarks` provides a list of facial features belonging to the detect
 The contour of the detected faces and landmarks is described as a sequence of `Point2D` and the units
 conform to the 
 [`pointsOfInterest`](https://w3c.github.io/mediacapture-image/#points-of-interest)
-field in [`MediaTrackSettings`](https://www.w3.org/TR/mediacapture-streams/#idl-def-MediaTrackSettings)
+field in [`MediaTrackSettings`](https://w3c.github.io/mediacapture-image/#dom-mediatracksettings-pointsofinterest)
 with the exception that the points may also lie outside of the frame since a detected face could be
 partially outside of the visible image.
 A `Point2D` is interpreted to represent a pixel position in a normalized square space. The origin of
