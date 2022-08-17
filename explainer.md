@@ -58,7 +58,7 @@ with the exception that the points may also lie outside of the frame since a det
 partially outside of the visible image.
 A `Point2D` is interpreted to represent a pixel position in a normalized square space. The origin of
 coordinates {x,y} = {0.0, 0.0} represents the upper leftmost corner whereas the {x,y} =
-{1.0, 1.0} represents the lower rightmost corner: the x coordinate (columns) increases rightwards and the y
+{1.0, 1.0} represents the lower rightmost corner relative to the rendered frame: the x coordinate (columns) increases rightwards and the y
 coordinate (rows) increases downwards.
 
 The constraint `faceDetectionMode` is used by applications to describe the level of facial data that they need. At the lowest enabled level, `presence` will return the sequence of `DetectedFace`, but the `contour` and `landmarks` sequences will be empty. When `faceDetectionMode` is `contour`, arbitrary number of points around the faces will be returned but no landmarks. An user agent might return only four contour points corresponding to face bounding box. If a Web application needs only maximum of four contour points (bounding box), it can set `faceDetectionMode` to `bounding-box` which limits number of contour points to four, residing at the corners of a rectangle around the detected faces.
