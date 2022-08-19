@@ -83,7 +83,7 @@ At the highest level, when `faceDetectionMode` is `landmarks`, the full precisio
 Face detection, using the proposed Javascript API, was compared to several other alternatives in power usage.
 The results were normalized against base case (viewfinder only, no face detection) and are shown in the following chart.
 
-![Package Power Consumption](ptat-fd15fps-rel.png)
+![Package Power Consumption](images/face-detection-ptat-fd15fps-rel.png)
 
 Javacript test programs were created to capture frames and to detect faces at VGA resolution (640x480) at 15 fps. The tests were run on Intel Tigerlake running Windows 11. A test run length was 120 seconds (2 minutes) with 640x480 pixel frame resolution. 
 
@@ -112,10 +112,12 @@ dictionary DetectedFace {
   FrozenArray<Point2D>              contour;
   FrozenArray<DetectedFaceLandmark> landmarks;
 };
+
 dictionary DetectedFaceLandmark {
   required FrozenArray<Point2D> contour;
   FaceLandmark                  type;
 };
+
 enum FaceLandmark {
   "eye",
   "eyeLeft",
@@ -123,18 +125,23 @@ enum FaceLandmark {
   "mouth",
   "nose"
 };
+
 partial dictionary MediaTrackSupportedConstraints {
   boolean faceDetectionMode = true;
 };
+
 partial dictionary MediaTrackCapabilities {
   sequence<DOMString> faceDetectionMode;
 };
+
 partial dictionary MediaTrackConstraintSet {
   ConstrainDOMString faceDetectionMode;
 };
+
 partial dictionary MediaTrackSettings {
   DOMString faceDetectionMode;
 };
+
 enum FaceDetectionMode {
   "none",         // Face detection is not needed
   "presence",     // Only the presence of face or faces is returned, not location
@@ -153,65 +160,92 @@ In this section we propose an API which extends WebCodecs `VideoFrame` and
 partial interface VideoFrame {
   readonly attribute FrozenArray<DetectedFace>? detectedFaces;
 };
+
 partial dictionary VideoFrameMetadata {
   FrozenArray<DetectedFace> detectedFaces;
 };
 ```
+
 Example are shown in sections [Example 1-1](#example-1-1) and
 [Example 2-1](#example-2-1).
+
 ### VideoFrame Side-Channel API (alternative 2)
+
 A generic method to add new metadata fields into WebCodecs `VideoFrame` has
 been attempted (see the issues w3c/webcodecs#95 and w3c/webcodecs#189) but this
 has not been merged yet. Due to this, it was suggested that a side-channel
 would be used to obtain the face detection results instead of either
 `VideoFrame` or `VideoFrameMetadata`.
+
 Therefore, in this section we propose an API which uses the side-channel method
 to provide face detection results.
+
 We modify `MediaStreamTrackProcessor` by adding to `MediaStreamTrackProcessorInit`
 a new `metadata` parameter which can be used to change the `MediaStreamTrackProcessor`
 to process video frames and metadata chunks instead of video frame only chunks.
 We also modify `HTMLVideoElement` by adding a new callback to it which provides
 video frame metadata including face detection results.
+
 ```js
 partial dictionary MediaStreamTrackProcessorInit {
   boolean metadata = false;
 };
+
 dictionary MediaStreamVideoFrameMetadata /* : VideoFrameMetadata */ {
   FrozenArray<DetectedFace> detectedFaces;
 };
+
 dictionary MediaStreamVideoFrameAndMetadata {
   required VideoFrame videoFrame;
   required MediaStreamVideoFrameMetadata metadata;
 };
+
 callback MediaStreamVideoFrameMetadataRequestCallback = undefined(DOMHighResTimeStamp now, MediaStreamVideoFrameMetadata metadata);
+
 partial interface HTMLVideoElement {
     unsigned long requestVideoFrameMediaStreamMetadataCallback(MediaStreamVideoFrameMetadataRequestCallback callback);
     undefined cancelVideoFrameMediaStreamMetadataCallback(unsigned long handle);
 };
 ```
+
 If a `MediaStreamTrackProcessor` is initiated with `{metadata: true}`,
 the `MediaStreamTrackProcessor` processes `MediaStreamVideoFrameAndMetadata`
 chunks (instead of `VideoFrame` chunks) and therefore passes them
 to `Transformer.transform(chunk, controller)` and accepts them
 for `controller.enqueue()`.
 An example is shown in section [Example 1-2](#example-1-2).
+
 The new callback `MediaStreamVideoFrameMetadataRequestCallback` is called
 when new face detection results are available on a video stream,
 similarly to `requestVideoFrameCallback`.
 An example is shown in Section [Example 2-2](#example-2-2).
+
 [PR](https://github.com/w3c/mediacapture-extensions/pull/48)
+
 ## Key scenarios
+
 Currently common platforms such as ChromeOS, Android, and Windows support system APIs which return only face bounding box and landmarks, not accurate contour, and therefore initial implementations are expected to support only bounding-box (ie. a contour with maximum of four points). These features can be used as the major building block in several scenarios such as:
+
 * Auto-mute: a videoconferencing application can automatically mute microphone or blank camera image if user (face) presence is not detected.
+
 * Face framing: application can use pan-tilt-zoom interface to zoom close up to user's face, or if pan-tilt-zoom is not available, crop the image digitally appropriately.
+
 * Face enhancement: application can apply various image enhancement filters to user's face. The filters may be either designed exclusively to faces, or when it is desired to save computation, background can be excluded from the filtering.
+
 * Funny hats: application may want to render augmented reality on top of user faces by drawing features such as glasses or a hat. For accurate rendering, facial landmarks would be preferred.
+
 * Video encoding: many video encoders can allocate higher amount of bits to given locations in frames. Face bounding boxes can be used to increase the visual quality of faces at the cost of lower background quality.
+
 * Neural networks: these can be used to derive accurate face contours, recognize faces, or extract other facial information. However, these are typically slow and heavyweight algorithms which are too burdensome to apply to entire images. A known face bounding box allows applying an algorithm only to the relevant part of images.
+
+
 ## Examples
+
 ### Example 1-1
+
 This example uses
 [Extended VideoFrame API (API alternative-1)](#extended-videoframe-api-alternative-1).
+
 ```js
 // main.js:
 // Check if face detection is supported by the browser
@@ -221,11 +255,13 @@ if (supports.faceDetectionMode) {
 } else {
   throw('Face detection is not supported');
 }
+
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
   video: { faceDetectionMode: 'bounding-box' }
 });
 const [videoTrack] = stream.getVideoTracks();
+
 // Use a video worker and show to user.
 const videoElement = document.querySelector("video");
 const videoGenerator = new MediaStreamTrackGenerator({kind: 'video'});
@@ -238,6 +274,7 @@ videoWorker.postMessage({
 }, [videoProcessor.readable, videoGenerator.writable]);
 videoElement.srcObject = new MediaStream([videoGenerator]);
 videoElement.onloadedmetadata = event => videoElement.play();
+
 // video-worker.js:
 self.onmessage = async function(e) {
   const videoTransformer = new TransformStream({
@@ -257,9 +294,12 @@ self.onmessage = async function(e) {
   .pipeTo(e.data.videoWritable);
 }
 ```
+
 ### Example 1-2
+
 This example uses
 [VideoFrame Side-Channel (API alternative 2)](#videoframe-side-channel-api-alternative-2).
+
 ```js
 // main.js:
 // Check if face detection is supported by the browser
@@ -269,11 +309,13 @@ if (supports.faceDetectionMode) {
 } else {
   throw('Face detection is not supported');
 }
+
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
   video: { faceDetectionMode: 'bounding-box' }
 });
 const [videoTrack] = stream.getVideoTracks();
+
 // Use a video worker and show to user.
 const videoElement = document.querySelector("video");
 const videoGenerator = new MediaStreamTrackGenerator({kind: 'video'});
@@ -286,6 +328,7 @@ videoWorker.postMessage({
 }, [videoProcessor.readable, videoGenerator.writable]);
 videoElement.srcObject = new MediaStream([videoGenerator]);
 videoElement.onloadedmetadata = event => videoElement.play();
+
 // video-worker.js:
 self.onmessage = async function(e) {
   const videoTransformer = new TransformStream({
@@ -305,9 +348,12 @@ self.onmessage = async function(e) {
   .pipeTo(e.data.videoWritable);
 }
 ```
+
 ### Example 2-1
+
 This example uses
 [Extended VideoFrame API (API alternative-1)](#extended-videoframe-api-alternative-1).
+
 ```js
 function updateCanvas(now, metadata) {
   const canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -324,6 +370,7 @@ function updateCanvas(now, metadata) {
   }
   videoElement.requestVideoFrameCallback(updateCanvas);
 }
+
 // Check if face detection is supported by the browser
 const supports = navigator.mediaDevices.getSupportedConstraints();
 if (supports.faceDetectionMode) {
@@ -331,10 +378,12 @@ if (supports.faceDetectionMode) {
 } else {
   throw('Face contour detection is not supported');
 }
+
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
   video: { faceDetectionMode: ['contour', 'bounding-box'] }
 });
+
 // Show to user.
 const canvasElement = document.querySelector("canvas");
 const canvasCtx = canvasElement.getContext("2d");
@@ -343,9 +392,12 @@ videoElement.srcObject = new MediaStream([videoGenerator]);
 videoElement.onloadedmetadata = event => videoElement.play();
 videoElement.requestVideoFrameCallback(updateCanvas);
 ```
+
 ### Example 2-2
+
 This example uses
 [VideoFrame Side-Channel (API alternative 2)](#videoframe-side-channel-api-alternative-2).
+
 ```js
 function updateCanvas(now, metadata) {
   const canvasCtx.drawImage(video, 0, 0, canvas.width, canvas.height);
@@ -362,6 +414,7 @@ function updateCanvas(now, metadata) {
   }
   videoElement.requestMediaStreamVideoFrameMetadataCallback(updateCanvas);
 }
+
 // Check if face detection is supported by the browser
 const supports = navigator.mediaDevices.getSupportedConstraints();
 if (supports.faceDetectionMode) {
@@ -369,10 +422,12 @@ if (supports.faceDetectionMode) {
 } else {
   throw('Face contour detection is not supported');
 }
+
 // Open camera with face detection enabled
 const stream = await navigator.mediaDevices.getUserMedia({
   video: { faceDetectionMode: ['contour', 'bounding-box'] }
 });
+
 // Show to user.
 const canvasElement = document.querySelector("canvas");
 const canvasCtx = canvasElement.getContext("2d");
@@ -381,21 +436,34 @@ videoElement.srcObject = new MediaStream([videoGenerator]);
 videoElement.onloadedmetadata = event => videoElement.play();
 videoElement.requestMediaStreamVideoFrameMetadataCallback(updateCanvas);
 ```
+
 ## Stakeholder Feedback / Opposition
+
 [Implementors and other stakeholders may already have publicly stated positions on this work. If you can, list them here with links to evidence as appropriate.]
+
 - [Firefox] : No signals
 - [Safari] : No signals
+
 [If appropriate, explain the reasons given by other implementors for their concerns.]
+
 ## References & acknowledgements
+
 Many thanks for valuable feedback and advice from:
+
 - Bernard Aboba
 - Harald Alvestrand
 - Jan-Ivar Bruaroey
 - Youenn Fablet
 - Dominique Hazael-Massieux
+
 ## Disclaimer
+
 Intel is committed to respecting human rights and avoiding complicity in human rights abuses. See Intel's Global Human Rights Principles. Intel's products and software are intended only to be used in applications that do not cause or contribute to a violation of an internationally recognized human right.
+
 Intel technologies may require enabled hardware, software or service activation.
+
 No product or component can be absolutely secure.
+
 Your costs and results may vary.
+
 © Intel Corporation
