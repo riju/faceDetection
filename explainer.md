@@ -83,7 +83,7 @@ At the highest level, when `faceDetectionMode` is `landmarks`, the full precisio
 Face detection, using the proposed Javascript API, was compared to several other alternatives in power usage.
 The results were normalized against base case (viewfinder only, no face detection) and are shown in the following chart.
 
-![Package Power Consumption](images/face-detection-ptat-fd15fps-rel.png)
+![Package Power Consumption](ptat-fd15fps-rel.png)
 
 Javacript test programs were created to capture frames and to detect faces at VGA resolution (640x480) at 15 fps. The tests were run on Intel Tigerlake running Windows 11. A test run length was 120 seconds (2 minutes) with 640x480 pixel frame resolution. 
 
