@@ -171,11 +171,23 @@ Example are shown in sections [Example 1-1](#example-1-1) and
 
 ### VideoFrame Side-Channel API (alternative 2)
 
-A generic method to add new metadata fields into WebCodecs `VideoFrame` has
-been attempted (see the issues w3c/webcodecs#95 and w3c/webcodecs#189) but this
-has not been merged yet. Due to this, it was suggested that a side-channel
-would be used to obtain the face detection results instead of either
-`VideoFrame` or `VideoFrameMetadata`.
+WebCodecs feedback on
+the [Extended VideoFrame API (alternative 1)](#extended-videoframe-api-alternative-1)
+was that
+ 1. They do not have a generic metadata interface for WebCodecs
+    `VideoFrame` and efforts to create one have not made progress
+    (see also the issues w3c/webcodecs#95 and w3c/webcodecs#189).
+ 2. They prefer to supply independent metadata in a side-channel,
+    typically an additional callback argument.
+ 3. Properly adding a new metadata field to VideoFrame requires updating
+    a lot of things (mostly around construct/clone/copy behavior), and
+    they are reluctant to build in direct support for this feature at
+    that level
+ 4. Simply adding a new field to the JS object however is something
+    a polyfill could do, and they don't really have a problem with that
+    level of integration if we don't have a way to supply it separately.
+    But such a field would not survive `clone()`. They also want to
+    review what happens with serialization (`postMessage()`, Streams).
 
 Therefore, in this section we propose an API which uses the side-channel method
 to provide face detection results.
